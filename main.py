@@ -13,9 +13,17 @@ if __name__ == "__main__":
         batch_size=64,
         memory_size=10000,
         target_update=10,
-        render_gym=False,
+        render_gym=True,
       
     )
     
-    agent.train(int(sys.argv[1]) if len(sys.argv) > 1 else 50, sys.argv[4] if len(sys.argv) > 4 else None, reward_scheme= sys.argv[3] if len(sys.argv) > 3 else None, print_logs=True, save_logs=True)
-    #agent.test(sys.argv[4] if len(sys.argv) > 4 else None, print_logs=True, save_logs=True)
+    # agent.train(        
+    #     (int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1] != "_" else 50),
+    #     (sys.argv[4] if len(sys.argv) > 4 and sys.argv[4] != "_" else None),
+    #     reward_scheme=(sys.argv[3] if len(sys.argv) > 3 and sys.argv[3] != "_" else None),
+    #     print_logs=True,
+    #     save_logs=True,
+    # )
+    
+
+    agent.test("models/acrobat_v1_3000epoch.model")

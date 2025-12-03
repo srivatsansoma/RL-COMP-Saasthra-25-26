@@ -22,11 +22,16 @@ class gym_agent:
         self.env = gym.make(env_name, render_mode="human" if render_gym else None)
         
         
-    def train(self, epochs = 50, path = None, reward_scheme = None, print_logs = True, save_logs = False):      
+    def train(self, epochs = 50, path = None, reward_scheme = None, print_logs = True, save_logs = False, continue_training_from_path = None):      
         memory_of_experiences = memory_back(self.memory_size)
         number_of_episodes_acrooss_epochs = 0
         
-        self.model = dqn(self.env.observation_space.shape[0], self.env.action_space.n, [128])
+        if continue_training_from_path is not None:
+            self.model = dqn(self.env.observation_space.shape[0], self.env.action_space.n, [128])
+            self.model.load_state_dict(torch.load(continue_training_from_path))
+            self.model.train()
+        else:
+            self.model = dqn(self.env.observation_space.shape[0], self.env.action_space.n, [128])
         target_model = dqn(self.env.observation_space.shape[0], self.env.action_space.n, [128])
                             
         optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
@@ -51,11 +56,11 @@ class gym_agent:
                     
                 
                     
-                next_state, _, terminated, truncated, info = self.env.step(action)
+                next_state, reward, terminated, truncated, info = self.env.step(action)
                 
                 match reward_scheme:
                     case None:
-                        reward = 1.0
+                        pass
                     case "cart_pole_v1_r1":
                         reward = RewardModifiers().cart_pole_v1_r1(next_state)
                     case "cart_pole_v1_r2":
@@ -116,8 +121,9 @@ class gym_agent:
                 
         
     def test(self, path, print_logs = True, save_logs = False):
-        self.model.load_state_dict(torch.load(path))
-        self.model.eval()
+        model = dqn(self.env.observation_space.shape[0], self.env.action_space.n, [128])
+        model.load_state_dict(torch.load(path))
+        model.eval()
         
         state, info = self.env.reset()
         states = []
@@ -125,7 +131,7 @@ class gym_agent:
         env_running = True
         
         while env_running:
-            action = self.model(torch.tensor(state, dtype=torch.float32, device=self.model.device).unsqueeze(0)).argmax().item()
+            action = model(torch.tensor(state, dtype=torch.float32, device=model.device).unsqueeze(0)).argmax().item()
             next_state, reward, terminated, truncated, info = self.env.step(action)
             
             env_running = True if not (terminated or truncated) else False
