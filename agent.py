@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 import numpy as np
 import torch
 
@@ -34,7 +34,6 @@ class gym_agent:
         
         for epoch in range(self.epochs):
             state, info = self.env.reset()
-            memory_of_experiences.add(state)
             
             states = []
             
@@ -42,8 +41,7 @@ class gym_agent:
             
             while env_running:
                 states.append(state)
-                memory_of_experiences.add((state, action, reward, next_state, terminated))
-                number_of_episodes_acrooss_epochs += 1
+                
                 
                 rand = np.random.rand()
                 if rand < self.epsilon:
@@ -51,7 +49,13 @@ class gym_agent:
                 else:
                     action = self.model(torch.tensor(state, dtype=torch.float32, device=self.model.device).unsqueeze(0)).argmax().item()
                     
+                
+                    
                 next_state, reward, terminated, truncated, info = self.env.step(action)
+                
+                
+                memory_of_experiences.add((state, action, reward, next_state, terminated))
+                number_of_episodes_acrooss_epochs += 1
                 
                 env_running = True if not (terminated or truncated) else False
                 state = next_state if env_running else self.env.reset()[0]
@@ -59,13 +63,15 @@ class gym_agent:
                     state, info = self.env.reset()
                 
                 #training the model every episode
-                if len(memory_of_experiences) > self.batch_size:
-                    states_b, actions_b, rewards_b, next_states_b, dones_b = memory_of_experiences.sample(self.batch_size)
+                if memory_of_experiences.__len__() > self.batch_size:
+                    samples = memory_of_experiences.sample(self.batch_size)
+                    states_b, actions_b, rewards_b, next_states_b, dones_b = zip(*samples)
                     
-                    states_b = torch.tensor(states_b, dtype=torch.float32, device=self.model.device)
+                    # convert list/tuple of numpy arrays to a single ndarray first (faster)
+                    states_b = torch.tensor(np.array(states_b), dtype=torch.float32, device=self.model.device)
                     actions_b = torch.tensor(actions_b, dtype=torch.int64, device=self.model.device).unsqueeze(1)
                     rewards_b = torch.tensor(rewards_b, dtype=torch.float32, device=self.model.device).unsqueeze(1)
-                    next_states_b = torch.tensor(next_states_b, dtype=torch.float32, device=self.model.device)
+                    next_states_b = torch.tensor(np.array(next_states_b), dtype=torch.float32, device=self.model.device)
                     dones_b = torch.tensor(dones_b, dtype=torch.float32, device=self.model.device).unsqueeze(1)
                     
                     current_q_values = self.model(states_b).gather(1, actions_b)
@@ -85,13 +91,19 @@ class gym_agent:
                     
             
             if self.print_logs:
-                print(states, f"epoch {epoch+1}/{self.epochs} completed")
+                print(f"epoch {epoch+1}/{self.epochs} completed — steps={len(states)}")
             
         self.env.close()   
+        torch.save(self.model.state_dict(), f"{self.env_name}_dqn_model.pth")
         return self.model           
                 
         
-    def test(self):
+    def test(self, path = None):
+        if path is None:
+            path = f"{self.env_name}_dqn_model.pth"
+        self.model.load_state_dict(torch.load(path))
+        self.model.eval()
+        
         state, info = self.env.reset()
         
         states = []
@@ -110,6 +122,6 @@ class gym_agent:
             states.append(state)
             
         if self.print_logs:
-            print(states, "testing completed")
+            print(f"testing completed — steps={len(states)}")
             
         self.env.close()

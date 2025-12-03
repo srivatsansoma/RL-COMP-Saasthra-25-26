@@ -13,3 +13,6 @@ class memory_back:
         
     def sample(self, batch_size):
         return random.sample(self.mem, batch_size)
+    
+    def __len__(self):
+        return len(self.mem)
