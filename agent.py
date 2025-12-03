@@ -4,6 +4,7 @@ import torch
 
 from dqn import dqn
 from memory_back import memory_back
+from reward_modifiers import RewardModifiers
 
 class gym_agent:
     def __init__(self, epochs, env_name, epsilon, epsilon_decay, min_epsilon, gamma, lr, batch_size, memory_size, target_update, human_readable=False, print_logs=False):
@@ -23,7 +24,7 @@ class gym_agent:
         self.env = gym.make(env_name, render_mode="human" if human_readable else None)
         
         
-    def train(self):      
+    def train(self, path = None):      
         memory_of_experiences = memory_back(self.memory_size)
         number_of_episodes_acrooss_epochs = 0
         
@@ -36,6 +37,7 @@ class gym_agent:
             state, info = self.env.reset()
             
             states = []
+            cum_reqard = 0
             
             env_running = True
             
@@ -51,8 +53,9 @@ class gym_agent:
                     
                 
                     
-                next_state, reward, terminated, truncated, info = self.env.step(action)
-                
+                next_state, _, terminated, truncated, info = self.env.step(action)
+                reward = RewardModifiers().cart_pole_v1_r2(next_state)
+                cum_reqard += reward
                 
                 memory_of_experiences.add((state, action, reward, next_state, terminated))
                 number_of_episodes_acrooss_epochs += 1
@@ -91,10 +94,15 @@ class gym_agent:
                     
             
             if self.print_logs:
-                print(f"epoch {epoch+1}/{self.epochs} completed — steps={len(states)}")
+                print(f"epoch {epoch+1}/{self.epochs},completed — steps={len(states)}, total_reward={cum_reqard:.2f}")
+                
+            with open("log_{self.env_name}_test.txt", "a") as f:
+                f.write(f"epoch {epoch+1}/{self.epochs},completed — steps={len(states)}, total_reward={cum_reqard:.2f}\n")
             
         self.env.close()   
-        torch.save(self.model.state_dict(), f"{self.env_name}_dqn_model.pth")
+        if path is None:
+            path = f"{self.env_name}_dqn_model.pth"
+        torch.save(self.model.state_dict(), path)
         return self.model           
                 
         
@@ -105,7 +113,7 @@ class gym_agent:
         self.model.eval()
         
         state, info = self.env.reset()
-        
+        cum_reqard = 0
         states = []
         
         env_running = True
@@ -124,4 +132,6 @@ class gym_agent:
         if self.print_logs:
             print(f"testing completed — steps={len(states)}")
             
+        with open(f"log_{self.env_name}_test.txt", "a") as f:
+            f.write(f"testing completed — steps={len(states)}\n")
         self.env.close()
