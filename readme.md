@@ -2,3 +2,4 @@ used for saasthra 2025-26. RL competition. hope that our team wins.
 resorces i used:
     https://towardsdatascience.com/reinforcement-learning-explained-visually-part-5-deep-q-networks-step-by-step-5a5317197f4b/
     https://spinningup.openai.com/en/latest/spinningup/keypapers.html
+    https://www.youtube.com/watch?v=zR11FLZ-O9M
