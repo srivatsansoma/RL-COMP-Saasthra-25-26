@@ -7,6 +7,7 @@ from memory_back import memory_back
 from reward_modifiers import RewardModifiers
 
 class gym_agent:
+    
     def __init__(self, env_name, epsilon, epsilon_decay, min_epsilon, gamma, lr, batch_size, memory_size, target_update, render_gym=False):
         self.env_name = env_name
         self.epsilon = epsilon
