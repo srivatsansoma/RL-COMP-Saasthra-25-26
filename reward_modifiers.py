@@ -1,3 +1,5 @@
+import numpy as np
+
 class RewardModifiers:
     
     def __init__(self):
@@ -29,3 +31,19 @@ class RewardModifiers:
             r2 = 0
             
         return 1.0 - r1 - r2
+    
+    def acrobot_v1_r1(self, state):
+        cos_theta_1 = state[0]
+        return -1 - cos_theta_1
+    
+    def acrobot_v1_r2(self, state):
+        if state[1] >=0:
+            if state[3] >=0:
+                return -1 - np.cos(np.arccos(state[0]) + np.arccos(state[2]))
+            else:
+                return -1 - np.cos(np.arccos(state[0]) - np.arccos(state[2]))
+        else:
+            if state[3] >=0:
+                return -1 + np.cos(np.arccos(state[0]) - np.arccos(state[2]))
+            else:
+                return -1 + np.cos(np.arccos(state[0]) + np.arccos(state[2]))

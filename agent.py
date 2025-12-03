@@ -69,6 +69,10 @@ class gym_agent:
                         reward = RewardModifiers().cart_pole_v1_r3(next_state)
                     case "cart_pole_v1_r4":
                         reward = RewardModifiers().cart_pole_v1_r4(next_state)
+                    case "acrobot_v1_r1":
+                        reward = RewardModifiers().acrobot_v1_r1(next_state)
+                    case "acrobot_v1_r2":
+                        reward = RewardModifiers().acrobot_v1_r2(next_state)
                         
                 cum_reqard += reward
                 
