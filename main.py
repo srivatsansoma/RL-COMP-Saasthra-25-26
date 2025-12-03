@@ -1,9 +1,10 @@
 from agent import gym_agent
 
+import sys
+
 if __name__ == "__main__":
     agent = gym_agent(
-        epochs=300,
-        env_name="CartPole-v1",
+        env_name=sys.argv[2] if len(sys.argv) > 2 else "CartPole-v1",
         epsilon=1.0,
         epsilon_decay=0.995,
         min_epsilon=0.01,
@@ -12,9 +13,9 @@ if __name__ == "__main__":
         batch_size=64,
         memory_size=10000,
         target_update=10,
-        human_readable=True,
-        print_logs=True
+        render_gym=True,
+      
     )
     
-    agent.train("extreame_harsh_v1_r2_model.pth")
-    agent.test("extreame_harsh_v1_r2_model.pth")
+    agent.train(int(sys.argv[1]) if len(sys.argv) > 1 else 50, sys.argv[4] if len(sys.argv) > 4 else None, reward_scheme= sys.argv[3] if len(sys.argv) > 3 else None, print_logs=True, save_logs=True)
+    agent.test(sys.argv[4] if len(sys.argv) > 4 else None, print_logs=True, save_logs=True)
